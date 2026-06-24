@@ -1,0 +1,23 @@
+{
+  "name": "web-observability-platform",
+  "version": "2.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Web Application Full Observability Platform",
+  "workspaces": [
+    "collector",
+    "api",
+    "dashboard"
+  ],
+  "engines": {
+    "node": ">=22.0.0"
+  },
+  "scripts": {
+    "launcher": "node launcher/server.js",
+    "launcher:dev": "node --watch launcher/server.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.6",
+    "express": "^5.2.1"
+  }
+}

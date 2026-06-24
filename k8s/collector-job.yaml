@@ -1,0 +1,67 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: obs-collector-{SESSION_ID}
+  labels:
+    app: obs-collector
+    session: "{SESSION_ID}"
+spec:
+  ttlSecondsAfterFinished: 86400
+  backoffLimit: 2
+  template:
+    metadata:
+      labels:
+        app: obs-collector
+        session: "{SESSION_ID}"
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: collector
+          image: obs-collector:latest
+          args: ["{TARGET_URL}"]
+          env:
+            - name: KAFKA_BROKERS
+              value: "kafka:9092"
+            - name: MINIO_ENDPOINT
+              value: "minio:9000"
+            - name: MINIO_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: obs-secrets
+                  key: minio-access-key
+            - name: MINIO_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: obs-secrets
+                  key: minio-secret-key
+            - name: REDIS_URL
+              value: "redis://redis:6379"
+            - name: COLLECTOR_TIMEOUT_MS
+              value: "30000"
+          resources:
+            requests:
+              memory: "2Gi"
+              cpu: "500m"
+            limits:
+              memory: "2Gi"
+              cpu: "2"
+          volumeMounts:
+            - mountPath: /dev/shm
+              name: dshm
+      volumes:
+        - name: dshm
+          emptyDir:
+            medium: Memory
+            sizeLimit: "512Mi"
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: obs-secrets
+type: Opaque
+stringData:
+  minio-access-key: "minioadmin"
+  minio-secret-key: "minioadmin"
+  jwt-secret: "change-this-in-production"
+  postgres-url: "postgres://obs:obspass@postgres:5432/observability"
+  opensearch-url: "http://opensearch:9200"

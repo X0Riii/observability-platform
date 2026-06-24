@@ -1,0 +1,24 @@
+obs-platform.localhost {
+    reverse_proxy /api/* dashboard:3000
+    reverse_proxy /ws/* dashboard:3000
+
+    reverse_proxy /api/metrics api:4000
+
+    handle /api/* {
+        reverse_proxy api:4000
+    }
+
+    handle {
+        reverse_proxy dashboard:3000
+    }
+
+    header {
+        X-Content-Type-Options "nosniff"
+        X-Frame-Options "DENY"
+        Referrer-Policy "strict-origin-when-cross-origin"
+    }
+
+    log {
+        output file /var/log/caddy/obs-access.log
+    }
+}

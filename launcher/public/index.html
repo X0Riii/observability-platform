@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>ALLSEER Sentinel — Control Panel</title>
+  <link rel="stylesheet" href="style.css"/>
+</head>
+<body>
+  <div class="container">
+    <header class="header">
+      <div class="logo">
+        <span class="logo-icon">🛡️</span>
+        <div>
+          <h1>ALLSEER Sentinel</h1>
+          <p class="subtitle">Web Observability Platform v2.0</p>
+        </div>
+      </div>
+      <div class="header-actions">
+        <span class="auto-refresh-badge" id="autoRefreshBadge">🔄 live</span>
+        <span id="allStatus" class="status-badge">Loading...</span>
+        <button id="btnRefresh" class="btn btn-sm">Refresh</button>
+      </div>
+    </header>
+
+    <div class="services-grid" id="servicesGrid"></div>
+
+    <div class="actions-bar">
+      <button id="btnStartAll" class="btn btn-primary">Start All</button>
+      <button id="btnStopAll" class="btn btn-danger">Stop All</button>
+      <button id="btnMigrate" class="btn btn-warning">Run Migration</button>
+      <button id="btnLaunchBrowser" class="btn btn-success" disabled>
+        Launch Browser  Dashboard
+      </button>
+    </div>
+
+    <div class="logs-section">
+      <div class="logs-header">
+        <h3>Logs</h3>
+        <button id="btnClearLogs" class="btn btn-sm">Clear</button>
+      </div>
+      <div class="logs" id="logsContainer">
+        <div class="log-line log-info">[System] Welcome to ALLSEER Sentinel.</div>
+      </div>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>

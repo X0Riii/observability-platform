@@ -1,0 +1,114 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: obs-api
+  labels:
+    app: obs-api
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: obs-api
+  template:
+    metadata:
+      labels:
+        app: obs-api
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "4000"
+        prometheus.io/path: "/api/metrics"
+    spec:
+      containers:
+        - name: api
+          image: obs-api:latest
+          ports:
+            - containerPort: 4000
+          env:
+            - name: KAFKA_BROKERS
+              value: "kafka:9092"
+            - name: OPENSEARCH_URL
+              value: "http://opensearch:9200"
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: obs-secrets
+                  key: postgres-url
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: obs-secrets
+                  key: jwt-secret
+            - name: REDIS_URL
+              value: "redis://redis:6379"
+          resources:
+            requests:
+              memory: "512Mi"
+              cpu: "250m"
+            limits:
+              memory: "1Gi"
+              cpu: "1"
+          livenessProbe:
+            httpGet:
+              path: /api/health
+              port: 4000
+            initialDelaySeconds: 10
+            periodSeconds: 15
+          readinessProbe:
+            httpGet:
+              path: /api/health
+              port: 4000
+            initialDelaySeconds: 5
+            periodSeconds: 10
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: obs-dashboard
+  labels:
+    app: obs-dashboard
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: obs-dashboard
+  template:
+    metadata:
+      labels:
+        app: obs-dashboard
+    spec:
+      containers:
+        - name: dashboard
+          image: obs-dashboard:latest
+          ports:
+            - containerPort: 3000
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "100m"
+            limits:
+              memory: "256Mi"
+              cpu: "500m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: obs-api
+spec:
+  selector:
+    app: obs-api
+  ports:
+    - port: 4000
+      targetPort: 4000
+  type: ClusterIP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: obs-dashboard
+spec:
+  selector:
+    app: obs-dashboard
+  ports:
+    - port: 3000
+      targetPort: 3000
+  type: LoadBalancer
