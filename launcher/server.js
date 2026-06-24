@@ -163,6 +163,19 @@ const services = {
     check: async () => false,
     port: 0,
   },
+  10: {
+    name: 'Rust Processor', icon: '\u26A1', type: 'binary',
+    cwd: resolve(ROOT, 'processing'), cmd: './observability-processor', args: [],
+    check: async () => { try { const r = await fetch('http://localhost:9100/health'); return r.ok; } catch { return false; } },
+    port: 9100,
+  },
+  11: {
+    name: 'Rust API Server', icon: '\u{1F680}', type: 'binary',
+    cwd: resolve(ROOT, 'api-rust'), cmd: './target/release/observability-api', args: [],
+    env: { PORT: '4001', DATABASE_URL: 'postgres://obs:obspass@localhost:5432/observability', KAFKA_BROKERS: 'localhost:9093', OPENSEARCH_URL: 'http://localhost:9200', MINIO_ENDPOINT: 'localhost:9000', MINIO_ACCESS_KEY: 'minioadmin', MINIO_SECRET_KEY: 'minioadmin', JWT_SECRET: 'obs-platform-secret-change-in-production' },
+    check: async () => { try { const r = await fetch('http://localhost:4001/health'); return r.ok; } catch { return false; } },
+    port: 4001,
+  },
 };
 
 const processes = {};
@@ -195,6 +208,7 @@ app.post('/api/services/:id/start', async (req, res) => {
     } else {
       const proc = spawn(svc.cmd, svc.args, {
         cwd: svc.cwd, stdio: ['ignore', 'pipe', 'pipe'], detached: false,
+        env: { ...process.env, ...(svc.env || {}) },
       });
       proc.stdout.on('data', (d) => process.stdout.write('[' + svc.name + '] ' + d));
       proc.stderr.on('data', (d) => process.stderr.write('[' + svc.name + '] ' + d));

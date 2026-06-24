@@ -99,6 +99,19 @@ services:
       opensearch:
         condition: service_healthy
 
+  processor:
+    build: ./processing
+    ports:
+      - "9100:9100"
+    environment:
+      - MINIO_ENDPOINT=http://minio:9000
+      - MINIO_ACCESS_KEY=minioadmin
+      - MINIO_SECRET_KEY=minioadmin
+      - LISTEN_ADDR=0.0.0.0:9100
+    depends_on:
+      minio:
+        condition: service_healthy
+
   dashboard:
     build: ./dashboard
     ports:

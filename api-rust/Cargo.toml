@@ -1,0 +1,40 @@
+[package]
+name = "observability-api"
+version = "2.0.0"
+edition = "2021"
+description = "High-performance Rust API for Observability Platform"
+
+[dependencies]
+tokio = { version = "1", features = ["full"] }
+axum = { version = "0.7", features = ["ws", "macros"] }
+axum-extra = { version = "0.9", features = ["typed-header"] }
+tower = "0.4"
+tower-http = { version = "0.5", features = ["cors", "compression-gzip", "trace"] }
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+tracing-appender = "0.2"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+sqlx = { version = "0.7", features = ["runtime-tokio-rustls", "postgres", "uuid", "chrono", "json"] }
+rdkafka = { version = "0.36", features = ["libz"] }
+opensearch = { version = "2", features = ["rustls-tls"] }
+reqwest = { version = "0.12", features = ["json", "rustls-tls"] }
+jsonwebtoken = "9"
+uuid = { version = "1", features = ["v4", "serde"] }
+chrono = { version = "0.4", features = ["serde"] }
+thiserror = "1"
+anyhow = "1"
+prometheus = { version = "0.13", features = ["process"] }
+s3 = "0.1"
+petgraph = "0.6"
+# smartcore omitted; isolation forest implemented manually in analysis/anomaly.rs
+rand = "0.8"
+base64 = "0.22"
+sha2 = "0.10"
+hex = "0.4"
+# zstd not needed; compression handled by processor service
+tokio-stream = "0.1"
+futures = "0.3"
+dashmap = "5"
+parking_lot = "0.12"
+lazy_static = "1"
