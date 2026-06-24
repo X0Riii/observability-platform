@@ -10,3 +10,4 @@ __pycache__/
 .idea/
 target/
 *.o
+web-observability-platform-roadmap.md
