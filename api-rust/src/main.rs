@@ -56,6 +56,7 @@ async fn main() -> anyhow::Result<()> {
     let kafka_producer: FutureProducer = rdkafka::config::ClientConfig::new()
         .set("bootstrap.servers", &config.kafka_brokers)
         .set("message.timeout.ms", "5000")
+        .set("broker.address.family", "v4")
         .create()?;
 
     let kafka_consumer: Arc<StreamConsumer> = Arc::new(rdkafka::config::ClientConfig::new()
@@ -65,6 +66,7 @@ async fn main() -> anyhow::Result<()> {
         .set("enable.auto.commit", "true")
         .set("session.timeout.ms", "6000")
         .set("max.poll.interval.ms", "300000")
+        .set("broker.address.family", "v4")
         .create()?);
 
     let metrics = metrics::Metrics::new();

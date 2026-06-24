@@ -23,6 +23,7 @@ async fn handle_socket(socket: WebSocket, session_id: String, state: Arc<AppStat
         .set("group.id", format!("ws-stream-{}", uuid::Uuid::new_v4()))
         .set("bootstrap.servers", &state.config.kafka_brokers)
         .set("auto.offset.reset", "latest")
+        .set("broker.address.family", "v4")
         .create()
         .expect("Failed to create Kafka consumer");
     let consumer = Arc::new(consumer);
