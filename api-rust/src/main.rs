@@ -59,15 +59,24 @@ async fn main() -> anyhow::Result<()> {
         .set("broker.address.family", "v4")
         .create()?;
 
-    let kafka_consumer: Arc<StreamConsumer> = Arc::new(rdkafka::config::ClientConfig::new()
-        .set("bootstrap.servers", &config.kafka_brokers)
-        .set("group.id", "observability-api-rust")
-        .set("auto.offset.reset", "earliest")
-        .set("enable.auto.commit", "true")
-        .set("session.timeout.ms", "6000")
-        .set("max.poll.interval.ms", "300000")
-        .set("broker.address.family", "v4")
-        .create()?);
+    macro_rules! mkc {
+        ($suffix:expr) => {
+            Arc::new(rdkafka::config::ClientConfig::new()
+                .set("bootstrap.servers", &config.kafka_brokers)
+                .set("group.id", format!("observability-api-rust-{}", $suffix))
+                .set("auto.offset.reset", "earliest")
+                .set("enable.auto.commit", "true")
+                .set("session.timeout.ms", "6000")
+                .set("max.poll.interval.ms", "300000")
+                .set("broker.address.family", "v4")
+                .create().unwrap())
+        };
+    }
+
+    let kafka_consumer: Arc<StreamConsumer> = mkc!("base");
+    let pg_consumer: Arc<StreamConsumer> = mkc!("pg");
+    let os_consumer: Arc<StreamConsumer> = mkc!("os");
+    let merger_consumer: Arc<StreamConsumer> = mkc!("timeline");
 
     let metrics = metrics::Metrics::new();
     let (timeline_tx, _) = broadcast::channel::<serde_json::Value>(1024);
@@ -88,7 +97,6 @@ async fn main() -> anyhow::Result<()> {
 
     // Postgres indexer
     let pg_idx = db::indexer::PostgresIndexer::new(state.db_pool.clone());
-    let pg_consumer = Arc::clone(&state.kafka_consumer);
     tokio::spawn(async move {
         run_indexer(pg_consumer, move |msg| {
             let idx = pg_idx.clone();
@@ -99,7 +107,6 @@ async fn main() -> anyhow::Result<()> {
 
     // OpenSearch indexer
     let os_idx = search::indexer::OpenSearchIndexer::new(state.search_client.clone());
-    let os_consumer = Arc::clone(&state.kafka_consumer);
     tokio::spawn(async move {
         run_indexer(os_consumer, move |msg| {
             let idx = os_idx.clone();
@@ -110,7 +117,6 @@ async fn main() -> anyhow::Result<()> {
 
     // Timeline merger
     let merger = timeline::merger::TimelineMerger::new(state.kafka_producer.clone());
-    let merger_consumer = Arc::clone(&state.kafka_consumer);
     let merger_tx = state.timeline_tx.clone();
     tokio::spawn(async move {
         run_indexer(merger_consumer, move |msg| {

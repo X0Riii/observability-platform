@@ -11,3 +11,4 @@ __pycache__/
 target/
 *.o
 web-observability-platform-roadmap.md
+AGENTS.md

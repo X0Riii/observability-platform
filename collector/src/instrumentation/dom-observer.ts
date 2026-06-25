@@ -58,19 +58,23 @@ const OBSERVER_SCRIPT = `
     window.__obsEmit({ type: 'dom:mutation', data: batch, ts: performance.now() });
   });
 
-  mo.observe(document.documentElement, {
-    childList: true,
-    subtree: true,
-    attributes: true,
-    attributeOldValue: true,
-    characterData: true,
-    characterDataOldValue: true,
-  });
+  try {
+    mo.observe(document.documentElement, {
+      childList: true,
+      subtree: true,
+      attributes: true,
+      attributeOldValue: true,
+      characterData: true,
+      characterDataOldValue: true,
+    });
+  } catch(e) {}
 
   const _attachShadow = Element.prototype.attachShadow;
   Element.prototype.attachShadow = function(init) {
     const root = _attachShadow.call(this, init);
-    mo.observe(root, { childList: true, subtree: true, attributes: true });
+    if (root && root.nodeType === 11) {
+      try { mo.observe(root, { childList: true, subtree: true, attributes: true }); } catch(e) {}
+    }
     window.__obsEmit({ type: 'dom:shadowRoot', data: { host: getNodePath(this), mode: init.mode }, ts: performance.now() });
     return root;
   };

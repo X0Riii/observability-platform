@@ -7,9 +7,17 @@ const EVAL_DETECT_SCRIPT = `
   if (window.__evalDetectorInstalled) return;
   window.__evalDetectorInstalled = true;
 
+  let _depth = 0;
+  function safeEmit(payload) {
+    if (_depth > 10) return;
+    _depth++;
+    try { window.__obsEmit(payload); } catch(e) {}
+    _depth--;
+  }
+
   const _eval = window.eval;
   window.eval = function(code) {
-    window.__obsEmit({
+    safeEmit({
       type: 'js:eval',
       data: {
         code: code.substring(0, 500),
@@ -25,7 +33,7 @@ const EVAL_DETECT_SCRIPT = `
   window.Function = new Proxy(_Function, {
     apply(target, thisArg, args) {
       const code = args.map(a => String(a)).join(', ').substring(0, 500);
-      window.__obsEmit({
+      safeEmit({
         type: 'js:newFunction',
         data: { code, length: args.reduce((a, b) => a + String(b).length, 0) },
         ts: performance.now(),
@@ -34,7 +42,7 @@ const EVAL_DETECT_SCRIPT = `
     },
     construct(target, args) {
       const code = args.map(a => String(a)).join(', ').substring(0, 500);
-      window.__obsEmit({
+      safeEmit({
         type: 'js:newFunction',
         data: { code, length: args.reduce((a, b) => a + String(b).length, 0) },
         ts: performance.now(),
